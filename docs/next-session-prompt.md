@@ -1,5 +1,9 @@
 # Next Session Prompt
 
+Historical: this prompt has been carried out. The addon is implemented, see [decisions.md](decisions.md) for status and [in-game-checklist.md](in-game-checklist.md) for what is left.
+
+The prompt was:
+
 Paste this into a new session started in the repository root:
 
 ```

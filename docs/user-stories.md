@@ -21,7 +21,7 @@ APIs marked (K) come from general knowledge and are unverified on Forever. See [
 * `CreateFrame("Frame")`, `frame:RegisterEvent("LOOT_OPENED")`, `frame:SetScript("OnEvent", ...)`
 * `GetNumLootItems()` for the slot count
 * `GetLootSlotType(slot)` to skip money and currency slots (numeric comparison)
-* `GetLootSlotInfo(slot)` for icon, name, quantity, quality, locked
+* `GetLootSlotInfo(slot)` for icon, name, quantity, quality, locked. Retail inserts `currencyID` before quality, so the Scanner detects the layout: if the fifth value is a number it is retail (quality, then locked), otherwise it is the older layout (quality, locked). Locked slots are not offered.
 * `GetLootSlotLink(slot)` (K) for the item link
 * `C_Item.GetItemInfo(link)` for sell price and stack size. Returns `nil` until cached.
 * `C_Item.RequestLoadItemDataByID(itemID)` and the `ITEM_DATA_LOAD_RESULT` event when the price is not cached yet
@@ -32,7 +32,8 @@ APIs marked (K) come from general knowledge and are unverified on Forever. See [
 
 * `C_Container.GetContainerNumFreeSlots(bag)` (K) for bags `0` to `NUM_BAG_SLOTS`
 * `GetItemFamily(link)` (K) so specialty bags are not miscounted
-* `C_Container.GetContainerItemInfo(bag, slot)` (K) and the item's stack size to check whether a partial stack has room
+* `C_Container.GetContainerItemInfo(bag, slot)` (K) and the item's stack size to check whether a partial stack has room. Free space in partial stacks of the same item is summed; if it covers the whole quantity the item needs no slot.
+* Free slots are summed per bag family (the second return of `GetContainerNumFreeSlots`). Matching specialty slots are used before general ones. When several items compete, free slots go to the highest-value items first and only the rest are planned as swaps.
 
 ## Story 3: Find the cheapest junk
 
@@ -51,7 +52,7 @@ APIs marked (K) come from general knowledge and are unverified on Forever. See [
 
 * `CreateFrame("Button", nil, LootFrame, "UIPanelButtonTemplate")`
 * `button:SetText`, `button:Show()`, `button:Hide()`
-* `GameTooltip:SetOwner` and `GameTooltip:SetBagItem(bag, slot)` (K)
+* `GameTooltip:SetOwner` and `GameTooltip:AddLine`. The tooltip is plain text lines; `GameTooltip:SetBagItem` (K) was left out to avoid another unverified API.
 * `LOOT_CLOSED` hides the button.
 * Keybinding: `Bindings.xml` with `<Binding name="AUTOJANITOR_REPLACE" header="AUTOJANITOR">` plus the global `BINDING_NAME_AUTOJANITOR_REPLACE` and `BINDING_HEADER_AUTOJANITOR` strings. Unverified on Forever.
 * `InCombatLockdown()` hides or disables the button in combat.
@@ -73,6 +74,13 @@ Revalidate, then act:
 9. `ClearCursor()` on every failure path.
 
 Because protected calls can fail silently on Forever, every step checks resulting state instead of relying on errors.
+
+As implemented in `Replacer.lua`:
+
+* Before picking up, the cursor must be empty (the addon never clobbers what the player holds), and the bag stack and loot slot are revalidated. Nothing is touched in combat.
+* After `DeleteCursorItem`, the cursor must be empty, the bag slot must no longer hold the grey, and the free-slot count must have risen. This is checked on `BAG_UPDATE_DELAYED`, and again on a 2 second timeout if the event never arrives.
+* After `LootSlot`, the item counts as looted only when the free-slot count drops. A bag update alone proves nothing, so the check waits for the drop or the timeout. `UI_ERROR_MESSAGE` with "Inventory is full" fails the swap immediately.
+* If the junk was deleted but the item was not looted, the report says so, so the player can loot it manually.
 
 ## Story 5b: Multiple items and failure cases
 
@@ -116,9 +124,13 @@ On click, swaps run one at a time. Each swap re-runs the Story 5 revalidation, a
 
 * `PLAYER_LOGIN` event
 * Test existence of: `C_Container.GetContainerItemInfo`, `C_Container.PickupContainerItem`, `C_Container.GetContainerNumFreeSlots`, `C_Container.GetContainerNumSlots`, `DeleteCursorItem`, `LootSlot`, `GetLootSlotLink`, `GetLootSlotInfo`, `GetNumLootItems`, `C_Item.GetItemInfo`, `GetCursorInfo`, `ClearCursor`
-* Print the missing names and keep the button disabled if any are missing.
+* Also tested, because the code depends on them: `GetLootSlotType`, `C_Item.RequestLoadItemDataByID`, `C_Timer.After`.
+* Optional (a missing one prints a warning and the addon degrades): `GetItemFamily`, `GetCoinTextureString`.
+* Print the missing names and keep the button disabled if any required one is missing. The keybinding then only prints a "disabled" message.
+* `Bindings.xml` cannot be tested at login. Check Key Bindings in-game ([in-game-checklist.md](in-game-checklist.md)).
 
 ## Testing approach
 
 * Pure-Lua logic (cheapest-junk selection, value comparison, free-slot check, revalidation) is tested outside the game with WoW APIs stubbed.
-* Frame, button, and event wiring is thin and tested by hand in-game.
+* Frame, button, and event wiring is thin. `tests/wiring_test.lua` smoke-tests it against stubbed globals; real behavior is verified by hand in-game.
+* The `Replacer` is tested against a simulated bag, cursor and loot window, including calls that silently do nothing.

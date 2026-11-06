@@ -25,6 +25,7 @@ The addon is shared and developed on a different machine, so we document the dis
 * Most likely post-launch path: `World of Warcraft\_forever_\Interface\AddOns\AutoJanitor\`. Sources agree on `_forever_`, but one notes the product folder name can vary, and `_classic_beta_` was beta-only. Confirm against the live client or the Battle.net "Show in Explorer" button.
 * CurseForge installs to the correct folder automatically, so publishing there avoids the path question.
 * TOC suffix: use a plain `AutoJanitor.toc`. The `_Camelot` suffix is unconfirmed and may be renamed, and `_Mainline.toc` is only mentioned as an option.
+* Install research, 2026-11-06: the [CurseForge migration blog](https://blog.curseforge.com/wow-forever-migrate-addons-beta-to-live/) labels `_classic_beta_` as the beta folder and `_forever_` as live, and [allthings.how](https://allthings.how/world-of-warcraft-forever-how-to-install-addons-without-the-curseforge-app/) (beta era) describes the manual zip install using `_classic_beta_`. Both warn about nested folders and say to restart the game fully when a new addon does not appear. No source confirms WowUp, Wago or Ajour support for Forever. The README install steps follow these.
 * Sources: [How to Install Addons on WoW Forever](https://forevermastery.com/en/guides/install-addons), [How to install WoW Forever addons](https://www.forevermods.com/guides/install-wow-forever-addons), [WoW Forever Addons: Installation](https://wowcarry.com/blog/wow-forever/addons-guide).
 
 ## Forever API differences relevant to this addon
@@ -54,7 +55,9 @@ The addon is shared and developed on a different machine, so we document the dis
 ## Open items
 
 * Confirm the live Forever AddOns folder path.
-* Confirm all "Unverified" APIs in-game using the startup self-check.
+* Confirm all "Unverified" APIs in-game using the startup self-check and [in-game-checklist.md](in-game-checklist.md).
+* Confirm the `GetLootSlotInfo` return layout and that `GetLootSlotType` returns `1` for items on Forever.
+* Confirm that waiting for `BAG_UPDATE_DELAYED` between `DeleteCursorItem` and `LootSlot` does not break the hardware-event requirement.
 * The source pages describe the beta, and the guide itself warns that builds before launch (Nov 4, 2026) could change the API.
 
 ## Sources
