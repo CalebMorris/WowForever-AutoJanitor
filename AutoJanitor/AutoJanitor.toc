@@ -2,7 +2,7 @@
 ## Title: Auto Janitor
 ## Notes: Replaces your cheapest grey item with loot that does not fit in your bags.
 ## Author: Caleb Morris
-## Version: 0.1.0
+## Version: 0.1.1
 src\Planner.lua
 src\Scanner.lua
 src\SelfCheck.lua
