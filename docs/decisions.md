@@ -10,6 +10,8 @@ These were not settled in planning, so the user was asked:
 * **Event wait:** Story 5 waits for `BAG_UPDATE_DELAYED` between `DeleteCursorItem` and `LootSlot`. If `LootSlot` then does not put the item in the bags, the batch stops and reports that the junk was deleted but the item was not looted. Each wait also has a 2 second timeout fallback in case the event never arrives.
 * **Free slots:** when several items do not fit, free slots go to the highest-value items first. Only the remaining items go through the swap planner.
 
+* **Releases:** a GitHub Action builds the bundle on pushed `v*` tags only. See "Releasing" in the README. The first release, `v0.1.0`, was made by hand before the workflow existed.
+
 Choices made without a question, because the docs left no room for doubt or the choice is a detail:
 
 * The self-check requires three APIs beyond the Story 7 list: `GetLootSlotType`, `C_Item.RequestLoadItemDataByID` and `C_Timer.After`. `GetItemFamily` and `GetCoinTextureString` are optional: missing ones print a warning and the addon degrades (all items treated as general-bag items, plain-text money).

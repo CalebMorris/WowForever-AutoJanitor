@@ -1,0 +1,47 @@
+name: Release
+
+# Runs only when a version tag such as v0.2.0 is pushed. Nothing runs on branch pushes or pull requests.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tagged commit
+        uses: actions/checkout@v4
+
+      - name: Install Lua 5.1 (the version the game runs)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1
+
+      - name: Run the tests
+        run: lua5.1 tests/run.lua
+
+      - name: Check the TOC version matches the tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if ! grep -qx "## Version: ${VERSION}" AutoJanitor/AutoJanitor.toc; then
+            echo "Tag ${GITHUB_REF_NAME} does not match the '## Version:' line in AutoJanitor/AutoJanitor.toc"
+            grep "## Version:" AutoJanitor/AutoJanitor.toc
+            exit 1
+          fi
+
+      - name: Build the bundle
+        run: |
+          git archive --format=zip --output="AutoJanitor-${GITHUB_REF_NAME}.zip" "${GITHUB_REF_NAME}" AutoJanitor
+          unzip -l "AutoJanitor-${GITHUB_REF_NAME}.zip"
+
+      - name: Create the release with the bundle attached
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" "AutoJanitor-${GITHUB_REF_NAME}.zip" \
+            --title "Auto Janitor ${GITHUB_REF_NAME#v}" \
+            --generate-notes

@@ -38,7 +38,7 @@ Other install methods:
 * **Zip from CurseForge:** if you download a release as a zip, unzip it first and check that it contains one `AutoJanitor` folder directly, then copy that folder as in step 4.
 * **Other addon managers** (WowUp, Wago, Ajour): no source confirms that they support Forever, so use the manual steps above.
 
-Developers can make a release zip with the folder at the top level by running `zip -r AutoJanitor.zip AutoJanitor` from the repository root.
+Release zips are attached to the [GitHub releases](https://github.com/CalebMorris/WowForever-AutoJanitor/releases). Each one holds a single `AutoJanitor` folder, ready to copy as in step 4.
 
 On login the addon checks that every API it needs exists on the client. Missing APIs are printed in chat and the button stays disabled. Many APIs are unverified on Forever, so follow the [in-game checklist](docs/in-game-checklist.md) the first time.
 
@@ -53,6 +53,15 @@ lua tests/run.lua
 ```
 
 The pure logic lives in `AutoJanitor/src/` and is tested with the WoW APIs stubbed. `AutoJanitor/AutoJanitor.lua` is thin wiring, covered by a stubbed smoke test and by hand in-game. All code stays Lua 5.1 compatible, because that is what the game runs.
+
+### Releasing
+
+Releases are built by [.github/workflows/release.yml](.github/workflows/release.yml), and only when a tag starting with `v` is pushed:
+
+1. Set `## Version:` in `AutoJanitor/AutoJanitor.toc` (for example `0.2.0`) and commit it.
+2. Tag and push: `git tag -a v0.2.0 -m "Auto Janitor 0.2.0"` then `git push origin v0.2.0`.
+
+The workflow runs the tests under Lua 5.1, fails if the tag does not match the TOC version, zips the committed `AutoJanitor/` folder with `git archive`, and creates a GitHub release with the zip attached and generated notes. Do not create the release by hand for a tag the workflow will build, or it will fail because the release already exists.
 
 ## Documentation
 
